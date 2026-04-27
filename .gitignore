@@ -1,0 +1,74 @@
+# =========================
+# Build directories
+# =========================
+build/
+cmake-build-*/
+out/
+bin/
+dist/
+
+# =========================
+# CMake generated files
+# =========================
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+!CMakeLists.txt
+
+# =========================
+# Compiled objects / binaries
+# =========================
+*.o
+*.obj
+*.lo
+*.a
+*.lib
+*.so
+*.dll
+*.dylib
+*.exe
+
+# Your built binary (from build/)
+searx_scraper
+
+# =========================
+# Debug / logs / runtime outputs
+# =========================
+results.txt
+*.log
+*.out
+
+# =========================
+# Compiler / IDE stuff
+# =========================
+*.d
+*.idb
+*.pdb
+*.ilk
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# =========================
+# Linux / WSL / system files
+# =========================
+*~
+*.swp
+*.swo
+.DS_Store
+.directory
+
+# =========================
+# CMake compiler ID artifacts (can appear in build dirs)
+# =========================
+CompilerIdCXX/
+CompilerIdC/
+
+# =========================
+# Optional: dependency tracking files
+# =========================
+*.depend
+*.dirstamp
