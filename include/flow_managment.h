@@ -99,3 +99,59 @@ public:
         for (auto& t : tasks) t.get();
     }
 };
+
+#pragma once
+#include <atomic>
+#include <chrono>
+#include <iostream>
+#include <thread>
+
+class ScraperApp {
+private:
+    CrawlerService crawler;
+    DatabaseStream db;
+    WorkerPool workers;
+    TaskPool<std::string> pool;
+
+    std::atomic<int> processed{0};
+    std::atomic<int> batches{0};
+
+public:
+    ScraperApp(const std::string& dbConn)
+        : crawler("http://localhost:8888", dbConn),
+          db(dbConn, 20) {}
+
+    void run(std::atomic<bool>& runningFlag) {
+        crawler.start();
+
+        int offset = 0;
+
+        while (runningFlag.load()) {
+            auto batch = db.fetch(offset);
+
+            if (batch.empty()) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+                batch = db.fetch(offset);
+                if (batch.empty()) break;
+            }
+
+            for (auto& b : batch) {
+                pool.push(b);
+            }
+
+            auto tasks = workers.run(batch);
+            workers.wait(tasks);
+
+            processed += batch.size();
+            batches++;
+
+            offset += 20;
+        }
+
+        crawler.join();
+    }
+
+    int getProcessed() const { return processed.load(); }
+    int getBatches() const { return batches.load(); }
+};

@@ -9,6 +9,9 @@
 #include <iostream>
 #include "bloom/bloom_filter.hpp"
 #include <nlohmann/json.hpp>
+#include <rocksdb/db.h>
+#include <rocksdb/options.h>
+#include "processing.h"
 
 using json = nlohmann::json;
 
@@ -18,11 +21,17 @@ std::string getText(GumboNode* node);
 void parseHTML(GumboNode* node, json& result);
 json htmlToJSON(const std::string& url);
 
+
+
 class ScraperWorker {
 private:
     std::unordered_map<std::string, nlohmann::json> cache;
     std::mutex cacheMutex;
+
     bloom_filter filter;
+
+    std::unique_ptr<rocksdb::DB> db;
+    rocksdb::Options options;
 
 public:
     ScraperWorker() {
@@ -31,7 +40,20 @@ public:
         parameters.false_positive_probability = 0.01;
         parameters.compute_optimal_parameters();
         filter = bloom_filter(parameters);
+
+        options.create_if_missing = true;
+        options.compression = rocksdb::kSnappyCompression;
+
+        rocksdb::DB* rawDb;
+        rocksdb::Status status = rocksdb::DB::Open(options, "./scraper_db", &rawDb);
+
+        if (!status.ok()) {
+            throw std::runtime_error("Failed to open RocksDB: " + status.ToString());
+        }
+
+        db.reset(rawDb);
     }
+
     void scrape(const std::string& url) {
         if (filter.contains(url)) {
             return;
@@ -43,10 +65,23 @@ public:
             std::cout << "Scraping: " << url << std::endl;
 
             nlohmann::json result = htmlToJSON(url);
+            Cleaner::clean(result);
+
+            std::string serialized = result.dump();
 
             {
                 std::lock_guard<std::mutex> lock(cacheMutex);
                 cache[url] = result;
+
+                rocksdb::Status s = db->Put(
+                    rocksdb::WriteOptions(),
+                    url,
+                    serialized
+                );
+
+                if (!s.ok()) {
+                    std::cerr << "RocksDB write failed: " << s.ToString() << std::endl;
+                }
             }
 
             std::cout << "\n--- SCRAPED DATA ---\n";
@@ -65,14 +100,27 @@ public:
     }
 
     bool getCached(const std::string& url, nlohmann::json& out) {
-        std::lock_guard<std::mutex> lock(cacheMutex);
+        {
+            std::lock_guard<std::mutex> lock(cacheMutex);
+            auto it = cache.find(url);
+            if (it != cache.end()) {
+                out = it->second;
+                return true;
+            }
+        }
 
-        auto it = cache.find(url);
-        if (it == cache.end()) {
+        std::string value;
+        rocksdb::Status s = db->Get(rocksdb::ReadOptions(), url, &value);
+
+        if (!s.ok()) {
             return false;
         }
 
-        out = it->second;
+        out = nlohmann::json::parse(value);
+
+        std::lock_guard<std::mutex> lock(cacheMutex);
+        cache[url] = out;
+
         return true;
     }
 

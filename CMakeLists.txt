@@ -8,30 +8,63 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # ---- CURL ----
 find_package(CURL REQUIRED)
 
-# ---- Gumbo (manual linking, no pkg-config) ----
+# ---- Gumbo ----
 find_library(GUMBO_LIB gumbo REQUIRED)
 
-# ---- PostgreSQL (libpqxx) ----
+# ---- PostgreSQL ----
 find_library(PQXX_LIB pqxx REQUIRED)
 find_library(PQ_LIB pq REQUIRED)
 
-# ---- Executable ----
+# ---- RocksDB ----
+find_library(ROCKSDB_LIB rocksdb REQUIRED)
+
+# RocksDB dependencies (IMPORTANT)
+find_library(SNAPPY_LIB snappy REQUIRED)
+find_library(Z_LIB z REQUIRED)
+find_library(LZ4_LIB lz4 REQUIRED)
+find_library(BZ2_LIB bz2 REQUIRED)
+
+# =========================================================
+# INCLUDE PATHS
+# =========================================================
+include_directories(
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/include/bloom
+)
+
+# =========================================================
+# COMMON LINK LIBS (avoid duplication)
+# =========================================================
+set(COMMON_LIBS
+    CURL::libcurl
+    ${GUMBO_LIB}
+    ${PQXX_LIB}
+    ${PQ_LIB}
+    ${ROCKSDB_LIB}
+    ${SNAPPY_LIB}
+    ${Z_LIB}
+    ${LZ4_LIB}
+    ${BZ2_LIB}
+)
+
+# =========================================================
+# CORE EXECUTABLE
+# =========================================================
 add_executable(searx_scraper
     src/main.cpp
     src/searxng_client.cpp
     src/scraper.cpp
 )
 
-# ---- Include directories ----
-target_include_directories(searx_scraper PRIVATE
-    ${CMAKE_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/include/bloom   # 👈 ADD THIS (where bloom_filter.hpp is)
+target_link_libraries(searx_scraper PRIVATE ${COMMON_LIBS})
+
+# =========================================================
+# STRESS TEST EXECUTABLE
+# =========================================================
+add_executable(stress_test
+    src/stress_test.cpp
+    src/searxng_client.cpp
+    src/scraper.cpp
 )
 
-# ---- Link libraries ----
-target_link_libraries(searx_scraper PRIVATE
-    CURL::libcurl
-    ${GUMBO_LIB}
-    ${PQXX_LIB}
-    ${PQ_LIB}
-)
+target_link_libraries(stress_test PRIVATE ${COMMON_LIBS})
