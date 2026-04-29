@@ -1,28 +1,26 @@
 #pragma once
+
 #include <vector>
 #include <future>
-#include <fstream>
 #include <algorithm>
-#include "fetchers.h"
 #include <iostream>
 #include <string>
-#include "fetchers.h"
+#include <memory>
+
 #include <pqxx/pqxx>
+
+#include "fetchers.h"
 #include "url_fetcher.h"
 
 class SearXNGClient {
 public:
     explicit SearXNGClient(std::string baseUrl);
-
     std::vector<ScrapedURL> search(const std::string& query);
 
 private:
     std::string baseUrl;
-
     std::string httpGet(const std::string& url);
 };
-
-
 
 class URLFetcherWorker {
 private:
@@ -35,21 +33,30 @@ public:
 
     void fetchPage(const std::string& query, int page) {
         try {
-            std::string pagedQuery = query + "&pageno=" + std::to_string(page);
+            std::string pagedQuery =
+                query + "&pageno=" + std::to_string(page);
+
             auto urls = client.search(pagedQuery);
 
             buffer.setPage(page, urls);
 
-            std::cout << "Page " << page 
+            std::cout << "Page " << page
                       << " fetched (" << urls.size() << " results)\n";
 
         } catch (const std::exception& e) {
-            std::cerr << "Page " << page << " error: " << e.what() << "\n";
+            std::cerr << "Page " << page
+                      << " error: " << e.what() << "\n";
         }
     }
 
     std::future<void> runAsync(const std::string& query, int page) {
-        return std::async(std::launch::async, &URLFetcherWorker::fetchPage, this, query, page);
+        return std::async(
+            std::launch::async,
+            &URLFetcherWorker::fetchPage,
+            this,
+            query,
+            page
+        );
     }
 };
 
@@ -58,8 +65,8 @@ private:
     SearXNGClient client;
     PageBuffer buffer;
     URLFetcherWorker worker;
-    BatchWriter writer;
-    pqxx::connection db;
+
+    pqxx::connection& db; 
 
     void initDB() {
         pqxx::work txn(db);
@@ -76,8 +83,12 @@ private:
     }
 
 public:
-    ScraperController(const std::string& baseUrl, const std::string& dbConn)
-        : client(baseUrl), worker(client, buffer), db(dbConn) {
+    ScraperController(const std::string& baseUrl,
+                      pqxx::connection& dbConn)
+        : client(baseUrl),
+          worker(client, buffer),
+          db(dbConn)
+    {
         initDB();
     }
 
@@ -99,12 +110,15 @@ public:
         txn.commit();
     }
 
-    void run(const std::string& query, int startPage, int numPages, int batchSize) {
+    void run(const std::string& query,
+             int startPage,
+             int numPages,
+             int batchSize)
+    {
         std::vector<std::future<void>> tasks;
 
         std::cout << "Starting concurrent scraping...\n";
 
-        // fetch pages [startPage ... startPage + numPages)
         for (int i = startPage; i < startPage + numPages; i++) {
             tasks.push_back(worker.runAsync(query, i));
         }
@@ -113,13 +127,18 @@ public:
             t.get();
         }
 
-        // batch DB writes
-        for (int i = startPage; i < startPage + numPages; i += batchSize) {
-            int end = std::min(i + batchSize - 1, startPage + numPages - 1);
+        for (int i = startPage;
+             i < startPage + numPages;
+             i += batchSize)
+        {
+            int end = std::min(i + batchSize - 1,
+                               startPage + numPages - 1);
 
             saveBatchToDB(i, end);
 
-            std::cout << "Saved batch " << i << "-" << end << " to DB\n";
+            std::cout << "Saved batch "
+                      << i << "-" << end
+                      << " to DB\n";
         }
 
         std::cout << "\nDone. Results saved to PostgreSQL.\n";

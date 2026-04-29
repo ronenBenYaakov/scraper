@@ -58,13 +58,3 @@ add_executable(searx_scraper
 
 target_link_libraries(searx_scraper PRIVATE ${COMMON_LIBS})
 
-# =========================================================
-# STRESS TEST EXECUTABLE
-# =========================================================
-add_executable(stress_test
-    src/stress_test.cpp
-    src/searxng_client.cpp
-    src/scraper.cpp
-)
-
-target_link_libraries(stress_test PRIVATE ${COMMON_LIBS})

@@ -1,30 +1,42 @@
 #pragma once
+
 #include <mutex>
 #include <condition_variable>
-#include "searxng_client.h"
-#include "scraper.h"
 #include <vector>
 #include <deque>
 #include <future>
 #include <string>
-#include <optional>
 #include <thread>
-
+#include <atomic>
+#include <optional>
+#include <iostream>
+#include "scraper.h"
+#include <pqxx/pqxx>
+#include <rocksdb/db.h>
+#include "searxng_client.h"
+// =========================
+// Blocking Task Queue
+// =========================
 template <typename T>
 class TaskPool {
 private:
     std::deque<T> data;
     std::mutex mtx;
+    std::condition_variable cv;
 
 public:
     void push(T value) {
-        std::lock_guard<std::mutex> lock(mtx);
-        data.push_back(std::move(value));
+        {
+            std::lock_guard<std::mutex> lock(mtx);
+            data.push_back(std::move(value));
+        }
+        cv.notify_one();
     }
 
-    std::optional<T> pop() {
-        std::lock_guard<std::mutex> lock(mtx);
-        if (data.empty()) return std::nullopt;
+    T popBlocking() {
+        std::unique_lock<std::mutex> lock(mtx);
+        cv.wait(lock, [&] { return !data.empty(); });
+
         T v = std::move(data.front());
         data.pop_front();
         return v;
@@ -36,14 +48,18 @@ public:
     }
 };
 
+// =========================
+// Crawler Service
+// =========================
 class CrawlerService {
 private:
     ScraperController scraper;
     std::thread th;
 
 public:
-    CrawlerService(const std::string& url, const std::string& db)
-        : scraper(url, db) {}
+    CrawlerService(const std::string& url,
+                   pqxx::connection& pgDb)
+        : scraper(url, pgDb) {}
 
     void start() {
         th = std::thread([this]() {
@@ -56,6 +72,9 @@ public:
     }
 };
 
+// =========================
+// Postgres Stream
+// =========================
 class DatabaseStream {
 private:
     pqxx::connection conn;
@@ -67,11 +86,14 @@ public:
 
     std::vector<std::string> fetch(int offset) {
         pqxx::work txn(conn);
+
         pqxx::result res = txn.exec_params(
-            "SELECT content FROM scraped_results ORDER BY id LIMIT $1 OFFSET $2",
+            "SELECT content FROM scraped_results "
+            "ORDER BY id LIMIT $1 OFFSET $2",
             batchSize,
             offset
         );
+
         txn.commit();
 
         std::vector<std::string> out;
@@ -82,30 +104,37 @@ public:
     }
 };
 
+// =========================
+// Worker Pool (shared worker)
+// =========================
 class WorkerPool {
 private:
-    ScraperWorker worker;
+    ScraperWorker& worker;
 
 public:
+    WorkerPool(ScraperWorker& w)
+        : worker(w) {}
+
     std::vector<std::future<void>> run(const std::vector<std::string>& items) {
         std::vector<std::future<void>> tasks;
+
         for (auto& u : items) {
             tasks.push_back(worker.runAsync(u));
         }
+
         return tasks;
     }
 
     void wait(std::vector<std::future<void>>& tasks) {
-        for (auto& t : tasks) t.get();
+        for (auto& t : tasks) {
+            t.get();
+        }
     }
 };
 
-#pragma once
-#include <atomic>
-#include <chrono>
-#include <iostream>
-#include <thread>
-
+// =========================
+// Scraper Application
+// =========================
 class ScraperApp {
 private:
     CrawlerService crawler;
@@ -117,9 +146,13 @@ private:
     std::atomic<int> batches{0};
 
 public:
-    ScraperApp(const std::string& dbConn)
-        : crawler("http://localhost:8888", dbConn),
-          db(dbConn, 20) {}
+    // 🔥 EVERYTHING uses shared DB externally
+    ScraperApp(const std::string& dbConn,
+            pqxx::connection& pgDb,
+            ScraperWorker& worker)
+        : crawler("http://localhost:8888", pgDb),
+        db(dbConn, 20),
+        workers(worker) {}
 
     void run(std::atomic<bool>& runningFlag) {
         crawler.start();
@@ -136,6 +169,7 @@ public:
                 if (batch.empty()) break;
             }
 
+            // push into queue (optional pipeline usage)
             for (auto& b : batch) {
                 pool.push(b);
             }
