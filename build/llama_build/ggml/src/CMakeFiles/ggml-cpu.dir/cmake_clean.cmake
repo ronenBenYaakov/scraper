@@ -4,6 +4,7 @@ file(REMOVE_RECURSE
   "../../../bin/libggml-cpu.so.0"
   "../../../bin/libggml-cpu.so.0.10.2"
   ".0"
+  "CMakeFiles/ggml-cpu.dir/link.d"
   "CMakeFiles/ggml-cpu.dir/ggml-cpu/amx/amx.cpp.o"
   "CMakeFiles/ggml-cpu.dir/ggml-cpu/amx/amx.cpp.o.d"
   "CMakeFiles/ggml-cpu.dir/ggml-cpu/amx/mmq.cpp.o"

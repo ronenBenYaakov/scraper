@@ -10,7 +10,9 @@ set(CMAKE_DEPENDS_LANGUAGES
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/ronen/scraper/src/Agent.cpp" "CMakeFiles/MyProject.dir/src/Agent.cpp.o" "gcc" "CMakeFiles/MyProject.dir/src/Agent.cpp.o.d"
   "/home/ronen/scraper/src/LinkFetcher.cpp" "CMakeFiles/MyProject.dir/src/LinkFetcher.cpp.o" "gcc" "CMakeFiles/MyProject.dir/src/LinkFetcher.cpp.o.d"
+  "/home/ronen/scraper/src/SiteScraper.cpp" "CMakeFiles/MyProject.dir/src/SiteScraper.cpp.o" "gcc" "CMakeFiles/MyProject.dir/src/SiteScraper.cpp.o.d"
   "/home/ronen/scraper/src/main.cpp" "CMakeFiles/MyProject.dir/src/main.cpp.o" "gcc" "CMakeFiles/MyProject.dir/src/main.cpp.o.d"
+  "" "MyProject" "gcc" "CMakeFiles/MyProject.dir/link.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

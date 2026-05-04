@@ -1,6 +1,6 @@
-set(LLAMA_VERSION      0.0.9013)
-set(LLAMA_BUILD_COMMIT e48034dfc)
-set(LLAMA_BUILD_NUMBER 9013)
+set(LLAMA_VERSION      0.0.9025)
+set(LLAMA_BUILD_COMMIT eff06702b)
+set(LLAMA_BUILD_NUMBER 9025)
 set(LLAMA_SHARED_LIB   ON)
 
 
@@ -30,7 +30,7 @@ endmacro()
 ####################################################################################
 
 set_and_check(LLAMA_INCLUDE_DIR "${PACKAGE_PREFIX_DIR}/include")
-set_and_check(LLAMA_LIB_DIR     "${PACKAGE_PREFIX_DIR}/lib")
+set_and_check(LLAMA_LIB_DIR     "${PACKAGE_PREFIX_DIR}/lib64")
 set_and_check(LLAMA_BIN_DIR     "${PACKAGE_PREFIX_DIR}/bin")
 
 find_package(ggml REQUIRED HINTS ${LLAMA_LIB_DIR}/cmake)

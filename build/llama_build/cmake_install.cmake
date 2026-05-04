@@ -29,7 +29,7 @@ endif()
 
 # Install shared libraries without execute permission?
 if(NOT DEFINED CMAKE_INSTALL_SO_NO_EXE)
-  set(CMAKE_INSTALL_SO_NO_EXE "1")
+  set(CMAKE_INSTALL_SO_NO_EXE "0")
 endif()
 
 # Is this installation the result of a crosscompile?
@@ -37,9 +37,9 @@ if(NOT DEFINED CMAKE_CROSSCOMPILING)
   set(CMAKE_CROSSCOMPILING "FALSE")
 endif()
 
-# Set default install directory permissions.
+# Set path to fallback-tool for dependency-resolution.
 if(NOT DEFINED CMAKE_OBJDUMP)
-  set(CMAKE_OBJDUMP "/usr/bin/objdump")
+  set(CMAKE_OBJDUMP "/usr/sbin/objdump")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
@@ -54,8 +54,8 @@ endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   foreach(file
-      "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/libllama.so.0.0.9013"
-      "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/libllama.so.0"
+      "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib64/libllama.so.0.0.9025"
+      "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib64/libllama.so.0"
       )
     if(EXISTS "${file}" AND
        NOT IS_SYMLINK "${file}")
@@ -64,13 +64,13 @@ if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT
            RPATH "")
     endif()
   endforeach()
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE SHARED_LIBRARY FILES
-    "/home/ronen/scraper/build/bin/libllama.so.0.0.9013"
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib64" TYPE SHARED_LIBRARY FILES
+    "/home/ronen/scraper/build/bin/libllama.so.0.0.9025"
     "/home/ronen/scraper/build/bin/libllama.so.0"
     )
   foreach(file
-      "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/libllama.so.0.0.9013"
-      "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/libllama.so.0"
+      "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib64/libllama.so.0.0.9025"
+      "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib64/libllama.so.0"
       )
     if(EXISTS "${file}" AND
        NOT IS_SYMLINK "${file}")
@@ -79,14 +79,14 @@ if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT
            OLD_RPATH "/home/ronen/scraper/build/bin:"
            NEW_RPATH "")
       if(CMAKE_INSTALL_DO_STRIP)
-        execute_process(COMMAND "/usr/bin/strip" "${file}")
+        execute_process(COMMAND "/usr/sbin/strip" "${file}")
       endif()
     endif()
   endforeach()
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE SHARED_LIBRARY FILES "/home/ronen/scraper/build/bin/libllama.so")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib64" TYPE SHARED_LIBRARY FILES "/home/ronen/scraper/build/bin/libllama.so")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
@@ -97,7 +97,7 @@ if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/cmake/llama" TYPE FILE FILES
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib64/cmake/llama" TYPE FILE FILES
     "/home/ronen/scraper/build/llama_build/llama-config.cmake"
     "/home/ronen/scraper/build/llama_build/llama-version.cmake"
     )
@@ -108,6 +108,12 @@ if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig" TYPE FILE FILES "/home/ronen/scraper/build/llama_build/llama.pc")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib64/pkgconfig" TYPE FILE FILES "/home/ronen/scraper/build/llama_build/llama.pc")
 endif()
 
+string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
+       "${CMAKE_INSTALL_MANIFEST_FILES}")
+if(CMAKE_INSTALL_LOCAL_ONLY)
+  file(WRITE "/home/ronen/scraper/build/llama_build/install_local_manifest.txt"
+     "${CMAKE_INSTALL_MANIFEST_CONTENT}")
+endif()

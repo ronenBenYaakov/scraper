@@ -4,6 +4,7 @@ file(REMOVE_RECURSE
   "../../../bin/libggml.so.0"
   "../../../bin/libggml.so.0.10.2"
   ".0"
+  "CMakeFiles/ggml.dir/link.d"
   "CMakeFiles/ggml.dir/ggml-backend-dl.cpp.o"
   "CMakeFiles/ggml.dir/ggml-backend-dl.cpp.o.d"
   "CMakeFiles/ggml.dir/ggml-backend-reg.cpp.o"

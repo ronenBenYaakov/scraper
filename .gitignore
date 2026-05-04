@@ -1,0 +1,53 @@
+# ---------------- BUILD OUTPUT ----------------
+build/
+cmake-build-*/
+Debug/
+Release/
+out/
+bin/
+obj/
+
+# compiled binaries
+*.o
+*.obj
+*.so
+*.dll
+*.dylib
+*.a
+*.exe
+
+# ---------------- CMAKE ----------------
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+compile_commands.json
+
+# ---------------- IDE ----------------
+.vscode/
+.idea/
+*.code-workspace
+
+# ---------------- OS ----------------
+.DS_Store
+Thumbs.db
+
+# ---------------- LOGS ----------------
+*.log
+
+# ---------------- DEPENDENCIES (optional local builds) ----------------
+llama.cpp/
+llama_build/
+
+# ---------------- TEMP FILES ----------------
+*.tmp
+*.swp
+*.swo
+
+# ---------------- CLANG / GCC ARTIFACTS ----------------
+*.gcda
+*.gcno
+*.gcov
+
+# ---------------- USER FILES ----------------
+*.env

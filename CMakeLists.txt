@@ -9,7 +9,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(SOURCES
     src/main.cpp
     src/Agent.cpp
-    src/LinkFetcher
+    src/LinkFetcher.cpp
+    src/SiteScraper.cpp
 )
 
 add_executable(MyProject ${SOURCES})
@@ -29,13 +30,23 @@ target_include_directories(MyProject PRIVATE
 
 # ---------------- CURL ----------------
 find_package(CURL REQUIRED)
-
 target_link_libraries(MyProject PRIVATE CURL::libcurl)
 
-# ---------------- NLOHMANN JSON ----------------
+# ---------------- JSON ----------------
 find_package(nlohmann_json REQUIRED)
-
 target_link_libraries(MyProject PRIVATE nlohmann_json::nlohmann_json)
+
+# ---------------- GUMBO ----------------
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(GUMBO REQUIRED gumbo)
+
+target_include_directories(MyProject PRIVATE
+    ${GUMBO_INCLUDE_DIRS}
+)
+
+target_link_libraries(MyProject PRIVATE
+    ${GUMBO_LIBRARIES}
+)
 
 # ---------------- LLAMA LIB ----------------
 target_link_libraries(MyProject PRIVATE llama)
