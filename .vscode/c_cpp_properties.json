@@ -1,0 +1,25 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+
+                "/home/ronen/llama.cpp",
+                "/home/ronen/llama.cpp/include",
+                "/home/ronen/llama.cpp/ggml/include",
+                "/home/ronen/llama.cpp/common",
+                "/home/ronen/llama.cpp/src",
+                "/home/ronen/llama.cpp/examples",
+
+                "/usr/include",
+                "/usr/local/include"
+            ],
+            "compilerPath": "/usr/bin/g++",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "linux-gcc-x64"
+        }
+    ],
+    "version": 4
+}
